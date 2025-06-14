@@ -14,12 +14,10 @@ def compute_match_score(resume_text_embedding, job_embeddings, resume_skills, jo
     if not hasattr(job_embeddings, 'any') or not job_embeddings.any(): return [], []
     semantic_scores = util.cos_sim(resume_text_embedding, job_embeddings).flatten().tolist()
     final_scores, all_matched_skills = [], []
-
     for i, job_text in enumerate(job_texts):
         base_score = semantic_scores[i] * 0.60
         keyword_bonus = 0.0
         matched_skills = []
-
         if resume_skills:
             job_text_lower = job_text.lower()
             for skill in resume_skills:
@@ -31,16 +29,13 @@ def compute_match_score(resume_text_embedding, job_embeddings, resume_skills, jo
     return final_scores, all_matched_skills
 
 def _fetch_jobs_from_hh(access_token, params):
-    start_time = time.time()
-    # Import the new function
-    from backend.job_fetching.init_tokens import get_current_access_token
-    
     try:
-        access_token = get_current_access_token()
-        if not access_token:
-            raise Exception("Could not retrieve a valid access token.")
-    except Exception as e:
-        print(f"Failed to get API token: {e}"); return []
+        print(f"DEBUG: Making Simple Text Search request with params: {params}")
+        response = requests.get("https://api.hh.ru/vacancies", params=params, headers={"Authorization": f"Bearer {access_token}"}, timeout=20)
+        response.raise_for_status()
+        return response.json().get("items", [])
+    except requests.exceptions.RequestException as e:
+        print(f"API request failed: {str(e)}"); return []
 
 def match_resume_to_jobs(resume_data: dict, keyword: str) -> list:
     start_time = time.time()
@@ -59,7 +54,7 @@ def match_resume_to_jobs(resume_data: dict, keyword: str) -> list:
     resume_text = " ".join(resume_data.get('found_skills', [])) + " " + resume_data.get('experience', '')
     resume_embedding = model.encode(resume_text, show_progress_bar=False)
     
-    # two lists, one for scoring, and the other one with the full description for display
+    # create two lists: one for scoring, and the other one with the full description for display
     job_texts_for_scoring = []
     job_full_descriptions = []
     for job in fetched_jobs:
@@ -88,7 +83,7 @@ def match_resume_to_jobs(resume_data: dict, keyword: str) -> list:
             "matched_skills": all_matched_skills[i],
             "experience": job_item.get("experience", {}).get("name", "N/A"),
             "salary": salary_str,
-            # new data added
+            # New data added
             "location": job_item.get("area", {}).get("name", "N/A"),
             "description": job_full_descriptions[i]
         })

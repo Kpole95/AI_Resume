@@ -4,9 +4,13 @@ from api.routers import resumes
 
 app = FastAPI(title="Resume Job Matcher API")
 
+origins = [
+    "*"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

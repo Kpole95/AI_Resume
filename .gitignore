@@ -66,3 +66,6 @@ data/jobs.json
 # -------------------------------
 .DS_Store
 Thumbs.db
+
+
+docker build -t cr.yandex/crpis10siqtsucd4dhbe/resume-backend:latest .
