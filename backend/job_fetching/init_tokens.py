@@ -3,12 +3,10 @@ import os
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
-try:
-    import streamlit as st
-    IS_STREAMLIT = st._is_running_with_streamlit  # True only when running `streamlit run`
-except ImportError:
-    IS_STREAMLIT = False
+IS_STREAMLIT = os.getenv("RUNNING_STREAMLIT", "false").lower() == "true"
+
 
 # Setup paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -16,26 +14,19 @@ TOKEN_FILE = BASE_DIR / "config" / "tokens.json"
 
 
 def get_credentials():
-    """Gets credentials from Streamlit secrets (cloud) or .env + tokens.json (local)."""
-    if IS_STREAMLIT and "CLIENT_ID" in st.secrets:
-        return {
-            "client_id": st.secrets["CLIENT_ID"],
-            "client_secret": st.secrets["CLIENT_SECRET"],
-            "access_token": st.secrets.get("ACCESS_TOKEN"),
-            "refresh_token": st.secrets.get("REFRESH_TOKEN")
-        }
-    else:
-        load_dotenv(BASE_DIR / ".env")
-        if not TOKEN_FILE.exists():
-            raise FileNotFoundError(f"Token file not found at {TOKEN_FILE}")
-        with open(TOKEN_FILE, 'r') as f:
-            tokens = json.load(f)
-        return {
-            "client_id": os.getenv("CLIENT_ID"),
-            "client_secret": os.getenv("CLIENT_SECRET"),
-            "access_token": tokens.get("access_token"),
-            "refresh_token": tokens.get("refresh_token")
-        }
+    """Gets credentials from .env + tokens.json."""
+    load_dotenv(BASE_DIR / ".env")
+    if not TOKEN_FILE.exists():
+        raise FileNotFoundError(f"Token file not found at {TOKEN_FILE}")
+    with open(TOKEN_FILE, 'r') as f:
+        tokens = json.load(f)
+    return {
+        "client_id": os.getenv("CLIENT_ID"),
+        "client_secret": os.getenv("CLIENT_SECRET"),
+        "access_token": tokens.get("access_token"),
+        "refresh_token": tokens.get("refresh_token")
+    }
+
 
 
 def validate_token(access_token: str) -> bool:

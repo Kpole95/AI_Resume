@@ -3,7 +3,7 @@ import requests
 import re
 import math
 
-# Page Confirmation
+# Page Configuration
 st.set_page_config(
     page_title="AI Resume Job Matcher",
     page_icon="🎯",
@@ -31,15 +31,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Api endpoint
+# API endpoint
 API_URL = "https://ai-resume-backend-api.onrender.com/resumes/search-and-score"
-# Experienc options
+
+# Experience options
 EXPERIENCE_LEVELS = [
     "Doesn't matter", "Нет опыта", "От 1 года до 3 лет",
     "От 3 до 6 лет", "Более 6 лет"
 ]
 
-# Industry tagged list jobs 
+# Industry-tagged job titles
 INDUSTRY_JOB_TITLES = {
     "Information Technology (IT) & Software": [
         "Machine Learning Engineer", "Data Scientist", "Data Analyst", "Python Developer",
@@ -99,6 +100,7 @@ INDUSTRY_JOB_TITLES = {
     ]
 }
 
+# Prepare job title suggestions list and a map to industries
 JOB_TITLE_SUGGESTIONS = ["Select a suggested job title..."]
 TITLE_TO_INDUSTRY = {}
 for industry, titles in INDUSTRY_JOB_TITLES.items():
@@ -106,14 +108,17 @@ for industry, titles in INDUSTRY_JOB_TITLES.items():
         JOB_TITLE_SUGGESTIONS.append(title)
         TITLE_TO_INDUSTRY[title] = industry
 
-# Session state
-if 'jobs' not in st.session_state: st.session_state.jobs = []
-if 'search_ran' not in st.session_state: st.session_state.search_ran = False
-if 'page' not in st.session_state: st.session_state.page = 1
+# Session state initialization
+if 'jobs' not in st.session_state:
+    st.session_state.jobs = []
+if 'search_ran' not in st.session_state:
+    st.session_state.search_ran = False
+if 'page' not in st.session_state:
+    st.session_state.page = 1
 
-# Backend function
+# Backend request function
 def find_jobs(uploaded_file, custom_keyword, suggested_keyword):
-    keyword = custom_keyword or suggested_keyword
+    keyword = custom_keyword.strip() if custom_keyword else suggested_keyword
     if not uploaded_file:
         st.error("Please upload your resume first.")
         return
@@ -138,11 +143,24 @@ def find_jobs(uploaded_file, custom_keyword, suggested_keyword):
         except requests.exceptions.RequestException:
             st.error("API Error: Could not connect to the backend.")
 
-# UI header
+# UI Header
 st.title("AI Resume Job Matcher")
 
-# Input form
-with st.container(border=True):
+st.markdown("""
+<style>
+    div.stButton > button {
+        background-color: #1f6feb;
+        color: white;
+        border-radius: 8px;
+        height: 3em;
+        width: 100%;
+        font-weight: 600;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Input form container
+with st.container():
     st.markdown("### Start Your Search")
     uploaded_file = st.file_uploader("1. Upload Your Resume")
 
@@ -153,19 +171,18 @@ with st.container(border=True):
 
     custom_keyword = col2.text_input("...OR Enter a Custom Title", placeholder="e.g., Senior Java Developer")
 
-    st.button("Find Job Matches", type="primary", use_container_width=True,
-              on_click=find_jobs, args=(uploaded_file, custom_keyword, suggested_keyword))
+    st.button("Find Job Matches", on_click=find_jobs, args=(uploaded_file, custom_keyword, suggested_keyword))
 
     st.caption("Job data sourced from hh.ru")
 
-# Optional grouped titles reviewd
+# Optional: Show all suggested titles grouped by industry
 with st.expander("💼 View All Suggested Job Titles by Industry"):
     for industry, titles in INDUSTRY_JOB_TITLES.items():
         st.markdown(f"**{industry}**")
         st.markdown(", ".join(titles))
         st.markdown("---")
 
-# Display results
+# Display job results
 if st.session_state.search_ran:
     st.markdown("---")
     if st.session_state.jobs:
@@ -201,15 +218,15 @@ if st.session_state.search_ran:
             start = (st.session_state.page - 1) * items_per_page
             end = start + items_per_page
             for job in jobs[start:end]:
-                with st.container(border=True):
+                with st.container():
                     st.subheader(job.get("job_title", "No Title"))
                     st.caption(f"🏢 {job.get('company', 'N/A')} | 📍 {job.get('location', 'N/A')} | 💼 {job.get('experience', 'N/A')} | 💰 {job.get('salary', 'N/A')}")
                     score = int(job.get("score", 0) * 100)
-                    st.progress(score, text=f"{score}% Match")
+                    st.progress(score)
                     with st.expander("View Details & Matched Skills"):
-                        st.link_button("Apply on hh.ru", job.get("url", "#"))
+                        st.markdown(f"[Apply on hh.ru]({job.get('url', '#')})")
                         st.markdown("---")
                         st.markdown(job.get("description", "No description available."))
-                        st.markdown(f"--- \n**Matched Skills:** {', '.join(job.get('matched_skills', [])) or 'None'}")
+                        st.markdown(f"---\n**Matched Skills:** {', '.join(job.get('matched_skills', [])) or 'None'}")
     else:
         st.warning(f"No jobs were found for '{st.session_state.get('search_keyword_display', '')}'. Try another keyword.")
