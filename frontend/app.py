@@ -130,7 +130,7 @@ def find_jobs(uploaded_file, custom_keyword, suggested_keyword):
         try:
             files = {"file": (uploaded_file.name, uploaded_file.getvalue())}
             data = {"keyword": keyword}
-            response = requests.post(API_URL, files=files, data=data, timeout=90)
+            response = requests.post(API_URL, files=files, data=data, timeout=150)
             if response.status_code == 200:
                 st.session_state.jobs = response.json().get("matches", [])
             else:
