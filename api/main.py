@@ -1,11 +1,20 @@
 from fastapi import FastAPI
-from api.routers import resumes, jobs, matching
+from fastapi.middleware.cors import CORSMiddleware
+from api.routers import resumes
 
 app = FastAPI(title="Resume Job Matcher API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(resumes.router)
-app.include_router(jobs.router)
-app.include_router(matching.router)
+# app.include_router(jobs.router)
+# app.include_router(matching.router)
 
 @app.get("/health")
 async def health_check():

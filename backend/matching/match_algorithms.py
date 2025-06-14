@@ -14,10 +14,12 @@ def compute_match_score(resume_text_embedding, job_embeddings, resume_skills, jo
     if not hasattr(job_embeddings, 'any') or not job_embeddings.any(): return [], []
     semantic_scores = util.cos_sim(resume_text_embedding, job_embeddings).flatten().tolist()
     final_scores, all_matched_skills = [], []
+
     for i, job_text in enumerate(job_texts):
         base_score = semantic_scores[i] * 0.60
         keyword_bonus = 0.0
         matched_skills = []
+
         if resume_skills:
             job_text_lower = job_text.lower()
             for skill in resume_skills:
@@ -54,7 +56,7 @@ def match_resume_to_jobs(resume_data: dict, keyword: str) -> list:
     resume_text = " ".join(resume_data.get('found_skills', [])) + " " + resume_data.get('experience', '')
     resume_embedding = model.encode(resume_text, show_progress_bar=False)
     
-    # create two lists: one for scoring, and the other one with the full description for display
+    # two lists, one for scoring, and the other one with the full description for display
     job_texts_for_scoring = []
     job_full_descriptions = []
     for job in fetched_jobs:
@@ -83,7 +85,7 @@ def match_resume_to_jobs(resume_data: dict, keyword: str) -> list:
             "matched_skills": all_matched_skills[i],
             "experience": job_item.get("experience", {}).get("name", "N/A"),
             "salary": salary_str,
-            # New data added
+            # new data added
             "location": job_item.get("area", {}).get("name", "N/A"),
             "description": job_full_descriptions[i]
         })
