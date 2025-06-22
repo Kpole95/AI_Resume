@@ -38,3 +38,7 @@ data/jobs.json
 
 .DS_Store
 Thumbs.db
+
+data/temp_*.json
+
+*:Zone.Identifier
