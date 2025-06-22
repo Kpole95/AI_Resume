@@ -3,64 +3,17 @@ import requests
 import re
 import math
 import os
-<<<<<<< HEAD
-import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-logger.info("Starting Streamlit app")
-
-# Page Configuration
-try:
-    st.set_page_config(
-        page_title="AI Resume Job Matcher",
-        page_icon="🎯",
-        layout="wide"
-    )
-    logger.info("Page config set")
-except Exception as e:
-    logger.error(f"Page config failed: {str(e)}")
-    raise
-
-# Styling
-try:
-    st.markdown("""
-    <style>
-        /* Using a system font for reliability */
-        html, body, [class*="st-"] { font-family: sans-serif; }
-        .main { background-color: #0E1117; }
-        .st-emotion-cache-16txtl3 { background-color: #0E1117; }
-        body, .st-emotion-cache-10trblm, h1, h2, h3, p, label, .st-emotion-cache-1y4p8pa { color: #E6EDF3; }
-        .st-emotion-cache-16txtl3 { border: 1px solid #30363D; border-radius: 12px; }
-        div.st-emotion-cache-1v0mbdj {
-            border: 1px solid #30363D; border-radius: 10px;
-            padding: 1.5rem; margin-bottom: 1rem; background-color: #161B22;
-        }
-        h1 { color: #58A6FF; }
-        h2 { color: #58A6FF; padding-top: 1rem; border-top: 1px solid #30363d; }
-        [data-testid="stProgressBar"] > div > div > div {
-            background-image: linear-gradient(90deg, #1F6FEB, #58A6FF);
-        }
-    </style>
-    """, unsafe_allow_html=True)
-    logger.info("CSS applied")
-except Exception as e:
-    logger.error(f"CSS application failed: {str(e)}")
-    raise
-=======
-# page confirmation
 st.set_page_config(
     page_title="AI Resume Job Matcher",
-    page_icon="🎯",
     layout="wide"
 )
 
-# Style
+# Styling
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    html, body, [class*="st-"] { font-family: 'Inter', sans-serif; }
+    /* Using a system font for reliability in different environments */
+    html, body, [class*="st-"] { font-family: sans-serif; }
     .main { background-color: #0E1117; }
     .st-emotion-cache-16txtl3 { background-color: #0E1117; }
     body, .st-emotion-cache-10trblm, h1, h2, h3, p, label, .st-emotion-cache-1y4p8pa { color: #E6EDF3; }
@@ -76,12 +29,9 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
->>>>>>> f3e9499a61ba98af25341bb3fad9afc203e9b957
 
-logger.info("App initialized, serving UI")
-
-# [CHANGE] The default URL now points to your live Yandex Cloud backend.
-# This makes it easy for anyone to run the frontend locally for a demo.
+# API endpoint: Reads from an environment variable first,
+# with a fallback to your live Yandex Cloud backend for the demo.
 API_URL = os.getenv("API_URL", "https://bbackis1oi638qdm6tiu.containers.yandexcloud.net/resumes/search-and-score")
 
 # Experience options
@@ -167,11 +117,9 @@ def find_jobs(uploaded_file, custom_keyword, suggested_keyword):
     keyword = custom_keyword or suggested_keyword
     if not uploaded_file:
         st.error("Please upload your resume first.")
-        logger.error("No resume uploaded")
         return
     if not keyword or keyword == JOB_TITLE_SUGGESTIONS[0]:
         st.error("Please enter a custom title or choose one from the list.")
-        logger.error("No job title selected")
         return
 
     st.session_state.search_ran = True
@@ -181,20 +129,15 @@ def find_jobs(uploaded_file, custom_keyword, suggested_keyword):
 
     with st.spinner(f"Analyzing resume and searching for '{keyword}' roles..."):
         try:
-            logger.info(f"Sending request to {API_URL} with keyword: {keyword}")
             files = {"file": (uploaded_file.name, uploaded_file.getvalue())}
             data = {"keyword": keyword}
             response = requests.post(API_URL, files=files, data=data, timeout=90)
-            logger.info(f"Received response: status {response.status_code}")
             if response.status_code == 200:
                 st.session_state.jobs = response.json().get("matches", [])
-                logger.info(f"Found {len(st.session_state.jobs)} job matches")
             else:
                 st.error(f"Server Error: {response.status_code} - {response.text}")
-                logger.error(f"Server error: {response.status_code} - {response.text}")
         except requests.exceptions.RequestException as e:
-            st.error("API Error: Could not connect to the backend.")
-            logger.error(f"API error: {str(e)}")
+            st.error(f"API Error: Could not connect to the backend. Details: {str(e)}")
 
 # UI header
 st.title("AI Resume Job Matcher")
@@ -216,18 +159,14 @@ with st.container(border=True):
 
     st.caption("Job data sourced from hh.ru")
 
-<<<<<<< HEAD
 # Optional grouped titles reviewed
-=======
-# optional grouped titles reviewd
->>>>>>> f3e9499a61ba98af25341bb3fad9afc203e9b957
 with st.expander("💼 View All Suggested Job Titles by Industry"):
     for industry, titles in INDUSTRY_JOB_TITLES.items():
         st.markdown(f"**{industry}**")
         st.markdown(", ".join(titles))
         st.markdown("---")
 
-# Display results
+# display results
 if st.session_state.search_ran:
     st.markdown("---")
     if st.session_state.jobs:
