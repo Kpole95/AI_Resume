@@ -87,7 +87,6 @@ def extract_resume_data(file_path: str) -> dict:
         else:
             raise ValueError(f"Unsupported file type: {file_extension}. Please upload a .docx or .pdf file.")
 
-        
         full_text = "\n".join(full_text_lines)
         all_headers_to_standard_key = {
             header.upper(): standard_key
@@ -104,11 +103,11 @@ def extract_resume_data(file_path: str) -> dict:
             elif len(line.split()) <= 5 and not line.endswith('.') and (line.isupper() or line.istitle()):
                 current_section_key = line.lower().replace(" ", "_").replace("&", "and")
                 is_header = True
-            if is_header and current_section_key not in parsed_sections:
+            
+            if current_section_key not in parsed_sections:
                 parsed_sections[current_section_key] = []
-            elif not is_header:
-                if current_section_key not in parsed_sections:
-                    parsed_sections[current_section_key] = []
+                
+            if not is_header:
                 parsed_sections[current_section_key].append(line)
         
         final_data = {
@@ -133,8 +132,3 @@ def extract_resume_data(file_path: str) -> dict:
     except Exception as e:
         logger.error(f"A critical error occurred in the universal parser for file {file_path}: {str(e)}")
         raise RuntimeError(f"Could not parse the resume. The file may be corrupted or in an unsupported format. Details: {str(e)}")
-<<<<<<< HEAD
-
-
-=======
->>>>>>> f3e9499a61ba98af25341bb3fad9afc203e9b957
